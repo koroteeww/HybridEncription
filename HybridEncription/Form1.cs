@@ -25,13 +25,20 @@ namespace HybridEncription
         string encryptedMessage = "";
         byte[] encryptedBytes;
         string encryptedSessionKey = "";
+        byte[] encryptedSessionKeyBytes;
 
         string decryptedMessage = "";
+        byte[] decryptedSessionKeyBytes;
         string decryptedSessionKey = "";
+
+        RSACryptoServiceProvider csp = new RSACryptoServiceProvider();//make a new csp with a new keypair
+        RSAParameters priv_key;
+        RSAParameters pub_key;
 
         public Form1()
         {
             InitializeComponent();
+            csp = new RSACryptoServiceProvider();
         }
 
         private void buttonGenKey_Click(object sender, EventArgs e)
@@ -45,7 +52,7 @@ namespace HybridEncription
                 Bsessionkey = key;
             }
                 //sessionkey = (Guid.NewGuid()).ToString();
-                labelSessionKey.Text = "Session key: "+sessionkey;
+                labelSessionKey.Text = sessionkey;
         }
 
         private void buttonEncryptAes_Click(object sender, EventArgs e)
@@ -62,44 +69,60 @@ namespace HybridEncription
 
         private void buttonEncryptKeyRSA_Click(object sender, EventArgs e)
         {
+            byte[] data = Bsessionkey;
+
+            csp.ImportParameters(pub_key);//using public bob key
+            var encData = csp.Encrypt(data, false); // encrypt with PKCS#1_V1.5 Padding
+            encryptedSessionKeyBytes = encData;
+            encryptedSessionKey = Convert.ToBase64String(encryptedSessionKeyBytes);
+            labelEncKey.Text = encryptedSessionKey;
+            MessageBox.Show("Ok");
 
         }
 
         private void buttonSendKeyMessage_Click(object sender, EventArgs e)
         {
-
+            MessageBox.Show("Ok");
         }
 
         private void buttonDecryptSeessionKey_Click(object sender, EventArgs e)
         {
+            //decrypt with own BigInteger based implementation
+            var decBytes = MyRSAImpl.plainDecryptPriv(encryptedSessionKeyBytes, priv_key); 
+            var decData = decBytes.SkipWhile(x => x != 0).Skip(1).ToArray();//strip PKCS#1_V1.5 padding
+            decryptedSessionKeyBytes = decData;
+            decryptedSessionKey = Convert.ToBase64String(decryptedSessionKeyBytes);
 
+            labelDecryptedKey.Text = decryptedSessionKey;
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
             //generate random 256-bit (32 bytes) key
-            using (var random = new RNGCryptoServiceProvider())
-            {
-                var key = new byte[32];
-                random.GetBytes(key);
-                bobOpenKey = Convert.ToBase64String(key);
-                bobOpenKeyBytes = key;
+            pub_key = csp.ExportParameters(false); // export public key
+            priv_key = csp.ExportParameters(true); // export private key
 
-                var key2 = new byte[32];
-                random.GetBytes(key2);
-                bobPrivateKey = Convert.ToBase64String(key2);
-                bobPrivateKeyBytes = key2;
-            }
 
             //bobOpenKey = (Guid.NewGuid()).ToString();
             //bobPrivateKey = (Guid.NewGuid()).ToString();
-            textBoxBobOpenKey.Text = bobOpenKey;
-            textBoxBobPrivateKey.Text = bobPrivateKey;
+            textBoxBobOpenKey.Text = rsaParamString(pub_key);
+            textBoxBobPrivateKey.Text = rsaParamString(priv_key);
         }
+        private string rsaParamString(RSAParameters key)
+        {
+            string d = key.D == null ? "" : Convert.ToBase64String(key.D);
+            string m = key.Modulus == null ? "" : Convert.ToBase64String(key.Modulus);
+            string p = key.P == null ? "" : Convert.ToBase64String(key.P);
 
+            string dp = key.P == null ? "" : Convert.ToBase64String(key.DP);
+            string dq = key.P == null ? "" : Convert.ToBase64String(key.DQ);
+            string exp = key.P == null ? "" : Convert.ToBase64String(key.Exponent);
+            return  d+ m + p+dp+dq+exp;
+        }
         private void buttonDecryptMessageAes_Click(object sender, EventArgs e)
         {
-
+            var res = AES.DecryptStringFromBytes_Aes(encryptedBytes, decryptedSessionKeyBytes);
+            textBoxDecryptedMessage.Text = res;
         }
     }
 }

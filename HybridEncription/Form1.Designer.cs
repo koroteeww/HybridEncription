@@ -47,13 +47,15 @@
             this.labelSessionKey = new System.Windows.Forms.Label();
             this.labelDecryptedKey = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.textBoxDecryptedMessage = new System.Windows.Forms.TextBox();
+            this.labelEncKey = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.labelEncKey);
             this.groupBox1.Controls.Add(this.labelSessionKey);
             this.groupBox1.Controls.Add(this.buttonSendKeyMessage);
             this.groupBox1.Controls.Add(this.buttonEncryptKeyRSA);
@@ -65,14 +67,14 @@
             this.groupBox1.Controls.Add(this.textBoxPlainTextAlice);
             this.groupBox1.Location = new System.Drawing.Point(13, 22);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(289, 353);
+            this.groupBox1.Size = new System.Drawing.Size(289, 371);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Алиса";
             // 
             // groupBox2
             // 
-            this.groupBox2.Controls.Add(this.textBox1);
+            this.groupBox2.Controls.Add(this.textBoxDecryptedMessage);
             this.groupBox2.Controls.Add(this.label4);
             this.groupBox2.Controls.Add(this.labelDecryptedKey);
             this.groupBox2.Controls.Add(this.buttonDecryptMessageAes);
@@ -83,7 +85,7 @@
             this.groupBox2.Controls.Add(this.label2);
             this.groupBox2.Location = new System.Drawing.Point(348, 22);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(358, 353);
+            this.groupBox2.Size = new System.Drawing.Size(358, 371);
             this.groupBox2.TabIndex = 1;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Боб";
@@ -170,7 +172,7 @@
             // 
             // buttonSendKeyMessage
             // 
-            this.buttonSendKeyMessage.Location = new System.Drawing.Point(14, 304);
+            this.buttonSendKeyMessage.Location = new System.Drawing.Point(13, 330);
             this.buttonSendKeyMessage.Name = "buttonSendKeyMessage";
             this.buttonSendKeyMessage.Size = new System.Drawing.Size(231, 23);
             this.buttonSendKeyMessage.TabIndex = 7;
@@ -217,7 +219,7 @@
             // labelSessionKey
             // 
             this.labelSessionKey.AutoSize = true;
-            this.labelSessionKey.Location = new System.Drawing.Point(11, 125);
+            this.labelSessionKey.Location = new System.Drawing.Point(11, 128);
             this.labelSessionKey.Name = "labelSessionKey";
             this.labelSessionKey.Size = new System.Drawing.Size(67, 13);
             this.labelSessionKey.TabIndex = 8;
@@ -241,19 +243,28 @@
             this.label4.TabIndex = 7;
             this.label4.Text = "Расшифрованное сообщение";
             // 
-            // textBox1
+            // textBoxDecryptedMessage
             // 
-            this.textBox1.Location = new System.Drawing.Point(24, 244);
-            this.textBox1.Multiline = true;
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(311, 66);
-            this.textBox1.TabIndex = 8;
+            this.textBoxDecryptedMessage.Location = new System.Drawing.Point(24, 244);
+            this.textBoxDecryptedMessage.Multiline = true;
+            this.textBoxDecryptedMessage.Name = "textBoxDecryptedMessage";
+            this.textBoxDecryptedMessage.Size = new System.Drawing.Size(311, 66);
+            this.textBoxDecryptedMessage.TabIndex = 8;
+            // 
+            // labelEncKey
+            // 
+            this.labelEncKey.AutoSize = true;
+            this.labelEncKey.Location = new System.Drawing.Point(14, 294);
+            this.labelEncKey.Name = "labelEncKey";
+            this.labelEncKey.Size = new System.Drawing.Size(112, 13);
+            this.labelEncKey.TabIndex = 9;
+            this.labelEncKey.Text = "encrypted session key";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(751, 399);
+            this.ClientSize = new System.Drawing.Size(751, 415);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.Name = "Form1";
@@ -287,8 +298,9 @@
         private System.Windows.Forms.Label labelSessionKey;
         private System.Windows.Forms.Label labelDecryptedKey;
         private System.Windows.Forms.Button buttonDecryptMessageAes;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.TextBox textBoxDecryptedMessage;
         private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label labelEncKey;
     }
 }
 

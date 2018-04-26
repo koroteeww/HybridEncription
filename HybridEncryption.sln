@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27428.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HybridEncription", "HybridEncription\HybridEncription.csproj", "{A30B698A-5BAB-4445-B364-4797D953F2FE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HybridEncryption", "HybridEncription\HybridEncryption.csproj", "{A30B698A-5BAB-4445-B364-4797D953F2FE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

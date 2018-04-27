@@ -17,13 +17,13 @@ namespace HybridEncription
 
             using (Aes aesAlg = Aes.Create())
             {
-                var ks = aesAlg.LegalKeySizes;
+                //256 bit
                 aesAlg.Key = Key;
 
                 aesAlg.GenerateIV();
                 IV = aesAlg.IV;
-
-                aesAlg.Mode = CipherMode.CBC;
+                //ECB!
+                aesAlg.Mode = CipherMode.ECB;
 
                 var encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
 
@@ -71,8 +71,8 @@ namespace HybridEncription
                 Array.Copy(cipherTextCombined, IV.Length, cipherText, 0, cipherText.Length);
 
                 aesAlg.IV = IV;
-
-                aesAlg.Mode = CipherMode.CBC;
+                //ECB!!
+                aesAlg.Mode = CipherMode.ECB;
 
                 // Create a decrytor to perform the stream transform.
                 ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);

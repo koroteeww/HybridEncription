@@ -13,6 +13,23 @@ namespace HybridEncription
 {
     public class TFRSAEncryption
     {
+        public byte[] RsaEncryptWithPublicBytes(byte[] clearData, string publicKey)
+        {
+            var bytesToEncrypt = clearData;
+
+            var encryptEngine = new Pkcs1Encoding(new RsaEngine());
+
+            using (var txtreader = new StringReader(publicKey))
+            {
+                var keyParameter = (AsymmetricKeyParameter)new PemReader(txtreader).ReadObject();
+
+                encryptEngine.Init(true, keyParameter);
+            }
+
+            var bytesRes = encryptEngine.ProcessBlock(bytesToEncrypt, 0, bytesToEncrypt.Length);
+            return bytesRes;
+
+        }
         public string RsaEncryptWithPublic(string clearText, string publicKey)
         {
             var bytesToEncrypt = Encoding.UTF8.GetBytes(clearText);
@@ -67,6 +84,24 @@ namespace HybridEncription
 
             var decrypted = Encoding.UTF8.GetString(decryptEngine.ProcessBlock(bytesToDecrypt, 0, bytesToDecrypt.Length));
             return decrypted;
+        }
+
+        public byte[] RsaDecryptWithPrivateBytes(byte[] Input, string privateKey)
+        {
+            var bytesToDecrypt = Input;
+
+            AsymmetricCipherKeyPair keyPair;
+            var decryptEngine = new Pkcs1Encoding(new RsaEngine());
+
+            using (var txtreader = new StringReader(privateKey))
+            {
+                keyPair = (AsymmetricCipherKeyPair)new PemReader(txtreader).ReadObject();
+
+                decryptEngine.Init(false, keyPair.Private);
+            }
+            var res = decryptEngine.ProcessBlock(bytesToDecrypt, 0, bytesToDecrypt.Length);
+            //var decrypted = Encoding.UTF8.GetString(res);
+            return res;
         }
 
         public string RsaDecryptWithPublic(string base64Input, string publicKey)

@@ -18,48 +18,54 @@ namespace HybridEncription
 {
     public partial class Form1 : Form
     {
-        string sessionkey = "";
-        byte[] BytesSessionkey;
-        string bobOpenKey = "";
-        //byte[] bobOpenKeyBytes;
-        string bobPrivateKey = "";
-        //byte[] bobPrivateKeyBytes;
+        bool useBouncyCastle = true;
 
-        string plaintext = "";
-        string encryptedMessage = "";
-        byte[] encryptedMessageBytes;
-        string encryptedSessionKey = "";
-        byte[] encryptedSessionKeyBytes;
+        Alice alice = new Alice();
+        Bob bob = new Bob();
 
-        string decryptedMessage = "";
-        byte[] decryptedSessionKeyBytes;
-        string decryptedSessionKey = "";
 
-        //rsa
+
+        //standart rsa
         RSACryptoServiceProvider csp = new RSACryptoServiceProvider();
         RSAParameters priv_key;
         RSAParameters pub_key;
-        
-        //BouncyCastle RSA
-        byte[] BouncyEncryptedSessionKeyBytes;
-        string BouncyEncryptedSessionKey = "";
-        byte[] BouncyDecryptedSessionKeyBytes;
-        string BouncyDecryptedSessionKey = "";
-        string publicKey = "-----BEGIN PUBLIC KEY-----\r\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCqGKukO1De7zhZj6+H0qtjTkVxwTCpvKe4eCZ0FPqri0cb2JZfXJ/DgYSF6vUpwmJG8wVQZKjeGcjDOL5UlsuusFncCzWBQ7RKNUSesmQRMSGkVb1/3j+skZ6UtW+5u09lHNsj6tQ51s1SPrCBkedbNf0Tp0GbMJDyR4e9T04ZZwIDAQAB\r\n-----END PUBLIC KEY-----";
-        string privateKey = "-----BEGIN RSA PRIVATE KEY-----\r\nMIICXAIBAAKBgQCqGKukO1De7zhZj6+H0qtjTkVxwTCpvKe4eCZ0FPqri0cb2JZfXJ/DgYSF6vUpwmJG8wVQZKjeGcjDOL5UlsuusFncCzWBQ7RKNUSesmQRMSGkVb1/3j+skZ6UtW+5u09lHNsj6tQ51s1SPrCBkedbNf0Tp0GbMJDyR4e9T04ZZwIDAQABAoGAFijko56+qGyN8M0RVyaRAXz++xTqHBLh3tx4VgMtrQ+WEgCjhoTwo23KMBAuJGSYnRmoBZM3lMfTKevIkAidPExvYCdm5dYq3XToLkkLv5L2pIIVOFMDG+KESnAFV7l2c+cnzRMW0+b6f8mR1CJzZuxVLL6Q02fvLi55/mbSYxECQQDeAw6fiIQXGukBI4eMZZt4nscy2o12KyYner3VpoeE+Np2q+Z3pvAMd/aNzQ/W9WaI+NRfcxUJrmfPwIGm63ilAkEAxCL5HQb2bQr4ByorcMWm/hEP2MZzROV73yF41hPsRC9m66KrheO9HPTJuo3/9s5p+sqGxOlFL0NDt4SkosjgGwJAFklyR1uZ/wPJjj611cdBcztlPdqoxssQGnh85BzCj/u3WqBpE2vjvyyvyI5kX6zk7S0ljKtt2jny2+00VsBerQJBAJGC1Mg5Oydo5NwD6BiROrPxGo2bpTbu/fhrT8ebHkTz2eplU9VQQSQzY1oZMVX8i1m5WUTLPz2yLJIBQVdXqhMCQBGoiuSoSjafUhV7i1cEGpb88h5NBYZzWXGZ37sJ5QsW+sJyoNde3xH8vdXhzU7eT82D6X/scw9RZz+/6rCJ4p0=\r\n-----END RSA PRIVATE KEY-----";
-        TFRSAEncryption RSA_BOUNCY_enc = new TFRSAEncryption();
+
+        //bouncycastle rsa
+        TFRSAEncryption RSA_BOUNCY = new TFRSAEncryption();
 
         public Form1()
         {
             InitializeComponent();
-            //var cp = new CspParameters();
-            //cp.KeyContainerName = "KeyContainerName";
-            ////cp.
-            //csp = new RSACryptoServiceProvider(cp);
+
             //make a new csp with a new keypair
             csp = new RSACryptoServiceProvider();
         }
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            checkBox1.Checked = useBouncyCastle;
+            //standart rsa
+            pub_key = csp.ExportParameters(false); // export public key
+            priv_key = csp.ExportParameters(true); // export private key
 
+
+
+            updateBobKeys();
+        }
+        void updateBobKeys()
+        {
+            if (useBouncyCastle)
+            {
+                textBoxBobOpenKey.Text = bob.publicKey;
+                textBoxBobPrivateKey.Text = bob.getprivateKey();
+            }
+            else
+            {
+                bob.bobOpenKey = csp.ToXmlString(false);
+                bob.bobPrivateKey = csp.ToXmlString(true);
+                textBoxBobOpenKey.Text = bob.bobOpenKey;//rsaParamString(pub_key);
+                textBoxBobPrivateKey.Text = bob.bobPrivateKey;
+            }
+        }
         private void buttonGenKey_Click(object sender, EventArgs e)
         {
             //generate random 256-bit (32 bytes) key
@@ -67,49 +73,71 @@ namespace HybridEncription
             {
                 var key = new byte[32];
                 random.GetBytes(key);
-                sessionkey = Convert.ToBase64String(key);
-                BytesSessionkey = key;
+                alice.sessionkey = Convert.ToBase64String(key);
+                alice.BytesSessionkey = key;
             }
-                //sessionkey = (Guid.NewGuid()).ToString();
-                labelSessionKey.Text = sessionkey;
+            //sessionkey = (Guid.NewGuid()).ToString();
+            labelSessionKey.Text = alice.sessionkey;
         }
 
         private void buttonEncryptAes_Click(object sender, EventArgs e)
         {
-            plaintext = textBoxPlainTextAlice.Text;
-            //byte[] bytesKey = Encoding.UTF8.GetBytes(sessionkey);
-            // Encrypt the string to an array of bytes. 
-            byte[] encrypted = AES.EncryptStringToBytes_Aes(plaintext, BytesSessionkey);
+            alice.plaintext = textBoxPlainTextAlice.Text;
+            if (!string.IsNullOrEmpty(alice.plaintext) && alice.BytesSessionkey != null)
+            {
+                //byte[] bytesKey = Encoding.UTF8.GetBytes(sessionkey);
+                // Encrypt the string to an array of bytes. 
+                byte[] encrypted = AES.EncryptStringToBytes_Aes(alice.plaintext, alice.BytesSessionkey);
 
-            encryptedMessage = Convert.ToBase64String(encrypted);
-            encryptedMessageBytes = encrypted;
-            textBoxEncryptedMessageAlice.Text = encryptedMessage;
-            //Console.WriteLine("Encrypted (b64-encode): {0}", );
+                alice.encryptedMessage = Convert.ToBase64String(encrypted);
+                alice.encryptedMessageBytes = encrypted;
+                textBoxEncryptedMessageAlice.Text = alice.encryptedMessage;
+            }
+            else
+            {
+                MessageBox.Show("plaintext or session key empty");
+            }
+            
         }
 
         private void buttonEncryptKeyRSA_Click(object sender, EventArgs e)
         {
-            byte[] data = BytesSessionkey;
+            if (alice.BytesSessionkey != null)
+            {
+                if (!useBouncyCastle)
+                {
+                    byte[] data = alice.BytesSessionkey;
 
-            csp.ImportParameters(pub_key);//using public bob key
-            var encData = csp.Encrypt(data, false); // encrypt with PKCS#1_V1.5 Padding
-            encryptedSessionKeyBytes = encData;
-            encryptedSessionKey = Convert.ToBase64String(encryptedSessionKeyBytes);
-            labelEncKey.Text = encryptedSessionKey;
-            //bouncy RSA
+                    csp.ImportParameters(pub_key);//using public key
+                    var encData = csp.Encrypt(data, false); // encrypt with PKCS#1_V1.5 Padding
+                    alice.encryptedSessionKeyBytes = encData;
+                    alice.encryptedSessionKey = Convert.ToBase64String(alice.encryptedSessionKeyBytes);
+                    labelEncKey.Text = alice.encryptedSessionKey;
+                }
+                else
+                {
+                    byte[] data = alice.BytesSessionkey;
+                    var encryptedWithPublic = RSA_BOUNCY.RsaEncryptWithPublicBytes(data, bob.publicKey);
+                    alice.encryptedSessionKeyBytes = encryptedWithPublic;
+                    alice.encryptedSessionKey = Convert.ToBase64String(alice.encryptedSessionKeyBytes);
+                    labelEncKey.Text = alice.encryptedSessionKey;
+
+                    ////bouncy RSA EXAMPLE
+                    //// Set up 
+                    //var input = "Perceived determine departure explained no forfeited";
+                    //// Encrypt it
+                    //var encryptedWithPublic = RSA_BOUNCY.RsaEncryptWithPublic(input, publicKey);
+                    //var encryptedWithPrivate = RSA_BOUNCY.RsaEncryptWithPrivate(input, privateKey);
+                    //// Decrypt
+                    //var output1 = RSA_BOUNCY.RsaDecryptWithPrivate(encryptedWithPublic, privateKey);
+                    //var output2 = RSA_BOUNCY.RsaDecryptWithPublic(encryptedWithPrivate, publicKey);
+                }
+            }
+            else
+            {
+                MessageBox.Show("BytesSessionkey null");
+            }
             
-            // Set up 
-            var input = "Perceived determine departure explained no forfeited";
-            
-            // Encrypt it
-            var encryptedWithPublic = RSA_BOUNCY_enc.RsaEncryptWithPublic(input, publicKey);
-
-            var encryptedWithPrivate = RSA_BOUNCY_enc.RsaEncryptWithPrivate(input, privateKey);
-
-            // Decrypt
-            var output1 = RSA_BOUNCY_enc.RsaDecryptWithPrivate(encryptedWithPublic, privateKey);
-
-            var output2 = RSA_BOUNCY_enc.RsaDecryptWithPublic(encryptedWithPrivate, publicKey);
 
             //string priv = Convert.ToBase64String(Encoding.UTF8.GetBytes(bobPrivateKey));
             //string priv = Convert.ToBase64String(Encoding.UTF8.GetBytes("OLOLO"));
@@ -137,10 +165,13 @@ namespace HybridEncription
         private void buttonSendKeyMessage_Click(object sender, EventArgs e)
         {
             //все нужные переменные уже есть
-            if (encryptedSessionKeyBytes != null && encryptedMessageBytes != null)
+            if (alice.encryptedSessionKeyBytes != null && alice.encryptedMessageBytes != null)
+            {
+                bob.getMessageFromAlice(alice.encryptedMessageBytes, alice.encryptedSessionKeyBytes);
                 MessageBox.Show("Ok");
+            }
             else
-                MessageBox.Show("something went wrong...");
+                MessageBox.Show("encryptedSessionKeyBytes or encryptedMessageBytes null");
 
         }
 
@@ -149,49 +180,46 @@ namespace HybridEncription
             //not working...
             //var dd = csp.Decrypt(encryptedSessionKeyBytes,false);
             //var dkey = Convert.ToBase64String(dd);
+            if (!useBouncyCastle)
+            {
+                var decData = bob.decryptKeyStandart(priv_key);
+                
 
-            //decrypt with own BigInteger based implementation
-            var decBytes = MyRSAImpl.plainDecryptPriv(encryptedSessionKeyBytes, priv_key); 
-            var decData = decBytes.SkipWhile(x => x != 0).Skip(1).ToArray();//strip PKCS#1_V1.5 padding
-            decryptedSessionKeyBytes = decData;
-            decryptedSessionKey = Convert.ToBase64String(decryptedSessionKeyBytes);
+                labelDecryptedKey.Text = Convert.ToBase64String(decData);
+            }
+            else
+            {
+                //using BouncyCastle
+                var decData = bob.decryptKeyBouncy();
 
-            labelDecryptedKey.Text = decryptedSessionKey;
+                labelDecryptedKey.Text = Convert.ToBase64String(decData);
+            }
 
-            //using BouncyCastle
 
         }
 
-        private void Form1_Load(object sender, EventArgs e)
-        {
-            //rsa
-            pub_key = csp.ExportParameters(false); // export public key
-            priv_key = csp.ExportParameters(true); // export private key
 
+        //private string rsaParamString(RSAParameters key)
+        //{
+        //    string d = key.D == null ? "" : Convert.ToBase64String(key.D);
+        //    string m = key.Modulus == null ? "" : Convert.ToBase64String(key.Modulus);
+        //    string p = key.P == null ? "" : Convert.ToBase64String(key.P);
 
-            //bobOpenKey = (Guid.NewGuid()).ToString();
-            //bobPrivateKey = (Guid.NewGuid()).ToString();
-            bobOpenKey = csp.ToXmlString(false);
-            bobPrivateKey = csp.ToXmlString(true);
-            textBoxBobOpenKey.Text = bobOpenKey;//rsaParamString(pub_key);
-            textBoxBobPrivateKey.Text = bobPrivateKey;
-        }
-        private string rsaParamString(RSAParameters key)
-        {
-            string d = key.D == null ? "" : Convert.ToBase64String(key.D);
-            string m = key.Modulus == null ? "" : Convert.ToBase64String(key.Modulus);
-            string p = key.P == null ? "" : Convert.ToBase64String(key.P);
-
-            string dp = key.P == null ? "" : Convert.ToBase64String(key.DP);
-            string dq = key.P == null ? "" : Convert.ToBase64String(key.DQ);
-            string exp = key.P == null ? "" : Convert.ToBase64String(key.Exponent);
-            return  d+ m + p+dp+dq+exp;
-        }
+        //    string dp = key.P == null ? "" : Convert.ToBase64String(key.DP);
+        //    string dq = key.P == null ? "" : Convert.ToBase64String(key.DQ);
+        //    string exp = key.P == null ? "" : Convert.ToBase64String(key.Exponent);
+        //    return  d+ m + p+dp+dq+exp;
+        //}
         private void buttonDecryptMessageAes_Click(object sender, EventArgs e)
         {
-            var res = AES.DecryptStringFromBytes_Aes(encryptedMessageBytes, decryptedSessionKeyBytes);
-            decryptedMessage = res;
+            var res = bob.decryptMessage();
             textBoxDecryptedMessage.Text = res;
+        }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            useBouncyCastle = checkBox1.Checked;
+            updateBobKeys();
         }
     }
 }
